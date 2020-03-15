@@ -1,0 +1,135 @@
+import sys
+#Create clas node
+class Node:
+    def __init__(self, max_leaf_size=3, height=0):
+        # Tree Nodes
+        self.max_leaf_size = max_leaf_size
+        self.sub_nodes = [None] * self.max_leaf_size
+
+        # Record the height of the node
+        self.height = height
+
+        # Bucket which stores a nested list of candidates
+        self.bucket = []
+
+    def insertToBucket(self, candidate=None):
+        self.bucket.append(candidate)
+        # Split the node if the bucket is full and the height smaller than 3
+        if (len(self.bucket) > self.max_leaf_size) and (self.height < 3):
+            for candidate in self.bucket:
+                hashValue = self.hash(candidate[self.height])
+                if self.sub_nodes[hashValue] is None:
+                    self.sub_nodes[hashValue] = Node(self.max_leaf_size,
+                                                     self.height+1)
+                self.sub_nodes[hashValue].insertToBucket(candidate)
+            self.bucket = []
+
+    def isLeafNode(self):
+        # Judge whether all of the subnodes are None
+        for i in range(self.max_leaf_size):
+            if self.sub_nodes[i] is not None:
+                return False
+
+        # Else this node is a leaf node
+        return True
+
+    def hash(self, value):
+        ''' return the hash index '''
+        def get_key(val): 
+            dict ={1:(1,3,7),2:(2,4,8),3:(5,6,9)}
+            for key, value in dict.items(): 
+                if val in value: 
+                    return key  
+        hashValue = get_key(value) #1,2,3
+        index = 0 # hashvalue = 1
+        if hashValue == 3: # right
+            index = self.max_leaf_size - 1 #index = 2
+        else: 
+            index = hashValue-1 # index = 1 # hash =2
+        return index
+
+
+class HashTree:
+    # Attributes
+    max_leaf_size = 3
+
+    def __init__(self, max_leaf_size=3):
+        self.max_leaf_size = max_leaf_size
+        self.root = Node(max_leaf_size=self.max_leaf_size)
+
+    def hash(self, value):
+        ''' return the bucket index '''
+        def get_key(val): 
+            dict ={1:(1,3,7),2:(2,4,8),3:(5,6,9)}
+            for key, value in dict.items(): 
+                    if val in value: 
+                        return key  
+        hashValue = get_key(value)
+        index = 0
+        if hashValue == 3:
+            index = self.max_leaf_size - 1
+        else:
+            index = hashValue - 1
+        return index
+
+    def insertCandidate(self, height, currentNode, candidate):
+        ''' Insert Candidate to the CurrentNode
+        Args:
+            height: represent the current layer of the hash tree
+            currentNode: represent the current node
+            candidate: represent the candidate to be inserted
+        '''
+        # n represent which subnode the candidate should be inserted to
+        leaf_size = self.max_leaf_size
+        n = self.hash(candidate[height])
+
+        if currentNode.sub_nodes[n] is None:
+            currentNode.sub_nodes[n] = Node(max_leaf_size=leaf_size,
+                                            height=height+1)
+
+        if currentNode.sub_nodes[n].isLeafNode():
+            currentNode.sub_nodes[n].insertToBucket(candidate)
+
+        else:
+            height += 1
+            currentNode = currentNode.sub_nodes[n]
+            self.insertCandidate(height, currentNode, candidate)
+
+    # Output the candidates in a nested list
+    def traversal(self):
+        if self is None:
+            return None
+
+        if self.root.isLeafNode():
+            if len(self.root.bucket) == 1:
+                return self.root.bucket[0]
+            else:
+                return self.root.bucket
+
+        nested_list = []
+        for i in range(self.max_leaf_size):
+            if self.root.sub_nodes[i] is not None:
+                tree = HashTree(self.max_leaf_size)
+                tree.root = self.root.sub_nodes[i]
+                nested_list.append(tree.traversal())
+        return nested_list
+
+
+# Get the candidates datasets
+candidates_list = new_item
+
+
+def main(argv):
+    # Start the Test
+    hashTree = HashTree()
+    for candidate in candidates_list:
+        hashTree.insertCandidate(height=0,
+                                 currentNode=hashTree.root,
+                                 candidate=candidate)
+
+    nested_list = hashTree.traversal()
+    print (nested_list)
+
+
+if __name__ == '__main__':
+    main(sys.argv)
